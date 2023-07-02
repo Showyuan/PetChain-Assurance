@@ -5,16 +5,16 @@ import {IERC20} from "./interface/IERC20.sol";
 
 contract Token is IERC20{
 
-    // 合約持有之代幣的總供給量
+    // 代幣的總供給量
     uint public totalSupply;
 
-    // 該地址代幣持有的餘額
+    // 擁有者 => 餘額
     mapping(address => uint) public balanceOf;
     
-    // 某一個帳戶授權給另一個帳戶的代幣數量
+    // 擁有者 => (被授權者 => 數量)
     mapping(address => mapping(address => uint)) public allowance;
 
-    // 設定名稱、幣種 ＆ 指定代幣會由多少個小數位分割
+    // 名稱及精度
     string public name;
     string public symbol;
     uint8 public decimals = 18;
@@ -24,22 +24,39 @@ contract Token is IERC20{
         symbol = _symbol;
     }
 
-    // 指定傳送的地址及轉帳金額
+    /** 
+        transfer 轉帳
+        recipient: 收款人
+        amount : 轉帳數量
+     */
     function transfer(address recipient, uint amount) external returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "Balance isn't enough");
+
         balanceOf[msg.sender] -= amount;
         balanceOf[recipient] += amount;
         emit Transfer(msg.sender, recipient, amount);
         return true;
     }
 
-    // 授權對象地址，可以使用多少我的額度
+    /** 
+        approve 授權
+        spender: 被授權者
+        amount : 授權使用數量
+     */
     function approve(address spender, uint amount) external returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "Balance isn't enough");
+
         allowance[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
         return true;
     }
 
-    // 授權某個人或另一份合約可使用的額度
+    /**
+        transferFrom 從某地址轉帳
+        sender: 支出地址
+        recipient: 接收地址
+        uint: 數量
+     */
     function transferFrom(
         address sender,
         address recipient,
@@ -54,10 +71,10 @@ contract Token is IERC20{
     }
 
     // 製造代幣
-    function mint(uint amount) external {
-        balanceOf[msg.sender] += amount;
+    function mint(address owner, uint amount) external {
+        balanceOf[owner] += amount;
         totalSupply += amount;
-        emit Transfer(address(0), msg.sender, amount);
+        emit Transfer(address(0), owner, amount);
     }
 
     // 銷毀代幣
@@ -65,5 +82,10 @@ contract Token is IERC20{
         balanceOf[msg.sender] -= amount;
         totalSupply -= amount;
         emit Transfer(msg.sender, address(0), amount);
+    }
+
+    // 取得代幣精度
+    function getDecimals() view external returns (uint8){
+        return decimals;
     }
 }
