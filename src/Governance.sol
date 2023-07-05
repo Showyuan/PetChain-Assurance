@@ -22,11 +22,11 @@ contract Governance {
         uint256 startTime;                  // 提案開始時間
         bool executed;                      // 是否已經執行過
         bool passed;                        // 是否通過
-        mapping(address => bool) voted;     // 已投票地址
     }
 
     Proposal[] public proposals;
     uint256 public nextProposalId;
+    mapping(uint => mapping(address => bool)) voted;
 
     event ProposalCreated(uint256 indexed id, string description);
     event VoteCasted(uint256 indexed proposalId, address indexed voter, bool support);
@@ -50,12 +50,14 @@ contract Governance {
         description: 描述
      */
     function createProposal(address target, bytes memory data, string memory description) external onlyTokenHolders {
-        Proposal storage proposal = proposals[nextProposalId - 1];
+        Proposal memory proposal;
         proposal.target = target;
         proposal.data = data;
         proposal.id = nextProposalId;
         proposal.description = description;
         proposal.startTime = block.timestamp;
+
+        proposals.push(proposal);
 
         emit ProposalCreated(proposal.id, proposal.description);
 
@@ -68,9 +70,9 @@ contract Governance {
         support: 是否支持
      */
     function vote(uint256 proposalId, bool support) external onlyTokenHolders {
-        Proposal storage proposal = proposals[proposalId];
+        Proposal storage proposal = proposals[proposalId - 1];
         require(proposal.startTime + VOTING_DURATION > block.timestamp, "Voting period has ended");
-        require(!proposal.voted[msg.sender], "Already voted for this proposal");
+        require(!voted[proposalId][msg.sender], "Already voted for this proposal");
 
         if (support) {
             proposal.votesFor += 1;
@@ -78,7 +80,7 @@ contract Governance {
             proposal.votesAgainst += 1;
         }
 
-        proposal.voted[msg.sender] = true;
+        voted[proposalId][msg.sender] = true;
 
         emit VoteCasted(proposalId, msg.sender, support);
     }
@@ -88,19 +90,18 @@ contract Governance {
         proposalId: 提案編號
      */
     function executeProposal(uint256 proposalId) external {
-        Proposal storage proposal = proposals[proposalId];
+        Proposal storage proposal = proposals[proposalId - 1];
         require(!proposal.executed, "Proposal has already been executed");
         require(proposal.startTime + VOTING_DURATION <= block.timestamp, "Voting period has not ended yet");
 
         // todo 要改成過半數嗎？
-        if (proposal.votesFor > proposal.votesAgainst) {
-            proposal.passed = true;
-            address target = proposal.target;
-            (bool result,) = target.call(proposal.data);
-            require(result, "Proposal execute failed!");
-        }
+        require(proposal.votesFor > proposal.votesAgainst, "Proposal don't approve!");
 
+        proposal.passed = true;
         proposal.executed = true;
+        address target = proposal.target;
+        (bool result,) = target.call(proposal.data);
+        require(result, "Proposal execute failed!");
 
         emit ProposalExecuted(proposalId, proposal.passed);
     }

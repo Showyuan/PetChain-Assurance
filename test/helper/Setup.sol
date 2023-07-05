@@ -31,8 +31,8 @@ contract SetUpTest is Test {
         petMedicalRecord = new PetMedicalRecord();
         reserveFund = new ReserveFund();
         insurance = new Insurance(address(petNft), address(token), address(reserveFund));
-        insuranceClaim = new InsuranceClaim(address(petNft), address(token), address(reserveFund), address(insurance), address(petMedicalRecord));
         governance = new Governance(address(token), address(insurance));
+        insuranceClaim = new InsuranceClaim(address(petNft), address(token), address(reserveFund), address(insurance), address(petMedicalRecord), address(governance));
         reserveFund.setClaimAddr(address(insuranceClaim));
 
         vm.stopPrank();

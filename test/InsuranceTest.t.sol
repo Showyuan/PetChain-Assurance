@@ -77,7 +77,7 @@ contract InsuranceTest is SetUpTest {
 
         // pet1 新增就醫紀錄
         vm.startPrank(doctor);
-        petMedicalRecord.addMedicalRecord(1, "surgery", "Feline Infectious Peritonitis", 2000);
+        string memory id = petMedicalRecord.addMedicalRecord(1, "surgery", "Feline Infectious Peritonitis", 2000);
         console.log("---------------------------------------------");
         console.log("Doctor add a medical record for pet id %s", 1);
         console.log("Treatment record is [%s] and diseaseName is [%s]", "surgery", "Feline Infectious Peritonitis");
@@ -89,7 +89,7 @@ contract InsuranceTest is SetUpTest {
         vm.startPrank(users[0]);
 
         uint preBalance = users[0].balance;
-        insuranceClaim.fileClaim(1, "cat/surgery");
+        insuranceClaim.fileClaim(1, "cat/surgery", id);
         uint claimAmount = users[0].balance - preBalance;
 
         assertEq(claimAmount, 2000 * 80 / 100);
@@ -113,13 +113,13 @@ contract InsuranceTest is SetUpTest {
 
         // pet1 新增就醫紀錄
         vm.startPrank(doctor);
-        petMedicalRecord.addMedicalRecord(1, "surgery", "Feline Infectious Peritonitis", 2000);
+        string memory id = petMedicalRecord.addMedicalRecord(1, "surgery", "Feline Infectious Peritonitis", 2000);
         vm.stopPrank();
 
         // user1 申請理賠
         vm.startPrank(users[0]);
         uint preBalance = users[0].balance;
-        insuranceClaim.fileClaim(1, "cat/surgery");
+        insuranceClaim.fileClaim(1, "cat/surgery", id);
         uint claimAmount = users[0].balance - preBalance;
         console.log("User call fileClaim() and success claim for %s wei ether", claimAmount);
         vm.stopPrank();
@@ -140,7 +140,7 @@ contract InsuranceTest is SetUpTest {
 
         // pet1 新增就醫紀錄
         vm.startPrank(doctor);
-        petMedicalRecord.addMedicalRecord(1, "X-ray", "Feline Infectious Peritonitis", 400);
+        string memory id = petMedicalRecord.addMedicalRecord(1, "X-ray", "Feline Infectious Peritonitis", 400);
         console.log("---------------------------------------------");
         console.log("Doctor add a medical record for pet id %s", 1);
         console.log("Treatment record is [%s] and diseaseName is [%s]", "X-ray", "Feline Infectious Peritonitis");
@@ -152,7 +152,7 @@ contract InsuranceTest is SetUpTest {
         vm.startPrank(users[0]);
 
         vm.expectRevert();
-        insuranceClaim.fileClaim(1, "cat/surgery");
+        insuranceClaim.fileClaim(1, "cat/surgery", id);
         console.log("User call fileClaim() faild because the pool is for surgery");
 
         vm.stopPrank();

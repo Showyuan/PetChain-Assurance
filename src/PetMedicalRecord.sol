@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import "forge-std/console.sol";
+import "openzeppelin-contracts/contracts/utils/Strings.sol";
+
 contract PetMedicalRecord {
     
-    //todo: 就醫紀錄應該要驗證白名單地址
+    //todo: 就醫紀錄應該要白名單地址
 
     struct MedicalRecord {
         uint256 petId;             // 晶片ID
@@ -27,7 +30,7 @@ contract PetMedicalRecord {
         medicalExpenses: 診療費
      */
     function addMedicalRecord(uint256 petId, string memory record, string memory diseaseName, uint256 medicalExpenses) external returns (string memory id){
-        id = string(abi.encodePacked(petId,_medicalRecords[petId].length));
+        id = string(abi.encodePacked(Strings.toString(petId), "-",  Strings.toString(_medicalRecords[petId].length)));
 
         MedicalRecord memory newRecord = MedicalRecord({
             petId: petId,
