@@ -2,6 +2,8 @@
 pragma solidity 0.8.17;
 
 contract PetMedicalRecord {
+    
+    //todo: 就醫紀錄應該要驗證白名單地址
 
     struct MedicalRecord {
         uint256 petId;             // 晶片ID

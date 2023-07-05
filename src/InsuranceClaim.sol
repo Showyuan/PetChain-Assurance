@@ -32,14 +32,17 @@ contract InsuranceClaim {
      */
     function fileClaim(uint256 petId, string memory poolName) external {
 
-        require(checkFraud(petId, poolName), "Recommend going into the governance process");
+        (uint index, bool allow) = checkFraud(petId, poolName);
+
+        require(allow, "Recommend going into the governance process");
 
         (,,,, address owner) = IPetNFT(PET_NFT_ADDR).getPetInfo(petId);
 
         require(owner == msg.sender, "Only policyholders can file a claim");
 
-        (,,uint256 coverageAmount) = IInsurance(INSURANCE_ADDR).getInsurancePool(poolName);
-        uint claimAmount = coverageAmount * 80 / 100;
+        // (,,uint256 coverageAmount) = IInsurance(INSURANCE_ADDR).getInsurancePool(poolName);
+        (,,,, uint medicalExpenses,) = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecord(petId, index);
+        uint claimAmount = medicalExpenses * 80 / 100;
         require(IReserveFund(RESERVE_FUND_ADDR).getReserveBalance(poolName) > claimAmount, "Insufficient funds in the reserve");
 
         IReserveFund(RESERVE_FUND_ADDR).disburseClaim(poolName, claimAmount, owner);
@@ -50,7 +53,7 @@ contract InsuranceClaim {
         petId: 寵物晶片ID
         poolName: 保險名稱
      */
-    function checkFraud(uint256 petId, string memory poolName) internal returns (bool){
+    function checkFraud(uint256 petId, string memory poolName) internal returns (uint index,bool allow){
         // 確認有投保
         (, string memory medicalProcedure, uint coverageAmount) = IInsurance(INSURANCE_ADDR).getInsurancePool(poolName);
 
@@ -62,14 +65,18 @@ contract InsuranceClaim {
         // 確認醫療紀錄正確
         uint count = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecordsCount(petId);
         for(uint i = 0; i < count; i++){
-            (, , , string memory diseaseName, uint medicalExpenses, uint timestamp) = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecord(petId, i);
-            if(keccak256(abi.encodePacked(medicalProcedure)) == keccak256(abi.encodePacked(diseaseName)) && startTime > timestamp){
+            (,, string memory record,, uint medicalExpenses, uint timestamp) = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecord(petId, i);
+            if(keccak256(abi.encodePacked(medicalProcedure)) == keccak256(abi.encodePacked(record)) && startTime <= timestamp){
                 if(medicalExpenses >= coverageAmount){
-                    return true;
+                    index = i;
+                    allow = true;
+                    return (index, allow);
                 }
             }
         }
         emit Fraud(petId, poolName);
-        return false;
+        
+        index = type(uint).max;
+        allow = false;
     }
 }
