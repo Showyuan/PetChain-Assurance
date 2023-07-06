@@ -1,25 +1,87 @@
 <h1 align="center">P2P Pet Insurance</h1>
 
-**Overview**
+# Overview
 
-P2P保險是一種原始的保險模式，類似於互助組織，一個共同分攤成員之間的損失和分享收益的群體，並以共享經濟概念為基礎，以保費更便宜為目標的互惠型保險組織。
+P2P寵物保險是一種基於共享經濟概念的互惠型保險組織，類似於互助組織的原始保險模式。它的目標是讓寵物飼主可以在無需信任的情況下，透過一個透明的平台進行保險投保。在這個平台上，寵物被視為非同質化代幣（NFT），並且每個飼主可以根據自己的需求和偏好自由選擇投保組合，包括門診理賠池、住院理賠池、手術理賠池等。
 
-旨在為飼主提供一個無需信任且透明的P2P保險平台，允許飼主為寵物投保，將植入晶片的寵物視同非同質化代幣（NFT），飼主可自行決定投保組合，選擇不同的理賠資金池投保，如門診理賠池、住院理賠池、手術理賠池等。
+這種P2P寵物保險的目標是讓飼主能夠享受更便宜的保費，同時提供共享風險和分享收益的群體保障。它利用區塊鏈技術和智能合約來實現透明、可靠的理賠流程，並且保費定價基於醫療費用行情和投保人數規模。此外，治理Token持有者還可以參與投票，決定理賠金額，並有權排除那些信用不佳的保戶。
 
-</br>
-
-**Features**
-
-1. 投保誘因：保單到期後若資金池仍有剩餘部分，將折扣有效保戶下期保費。
-2. 保費定價：依據醫療費用行情與投保人數規模定價。
-3. 資金分配：依不同理賠項目（如門診、住院、手術等）創建獨立理賠資金池。
-4. 理賠方式：DApp 結合獸醫診所的電子病歷，取代冗長的核保流程。
-5. 治理模式：各項目理賠金額由治理Token持有者決定，亦可投票踢除無信用之保戶。
+為寵物飼主提供方便、可靠且具有彈性的保障，並讓他們更好地管理和照顧自己的寵物的健康需求。
 
 </br>
 
-**Architecture**
+# Features
+
+1. 多元的投保選項：根據不同的理賠項目（例如門診、住院、手術等），建立獨立的保障資金池，讓用戶可以根據自身需求進行投保。
+2. 快速可靠的理賠流程：結合獸醫診所的電子病歷，取代繁瑣的核保流程，使理賠更加迅速和可靠。
+3. 透明的保費定價：根據醫療費用行情和投保人數規模，確定公平透明的保費定價機制，讓用戶清楚了解保費所涵蓋的保障範圍。
+4. 保障掌握在消費者手中：治理Token持有者有權決定各項理賠金額，同時也可以進行投票，排除那些信用不佳的保戶，確保保障資源得到有效分配。
+
+</br>
+
+# Framework
 
 ![image](https://github.com/Showyuan/P2P-Insurance/blob/main/infra.png)
 
+</br>
+
+# Development
+
+**Compile**
+```
+forge build
+```
+**Install Dependencies**
+```
+forge install [package name] --no-commit
+```
+**Remappings**
+```
+forge remappings > remappings.txt
+```
+
+</br>
+
+# Testing
+
+**InsuranceTest**
+* Test1: 10隻寵物註冊 NFT
+```
+forge test --mt test_ten_pets_mint -vv
+```
+* Test2: 10隻寵物投保
+```
+forge test --mt test_ten_pets_insure  -vv
+```
+* Test3: 1隻寵物理賠
+```
+forge test --mt test_one_pet_claim  -vv
+```
+* Test4: 確認資金池餘額是否正確減少
+```
+forge test --mt test_reserveFund_correct  -vv
+```
+* Test5: 醫療紀錄和實際投保項目不同，理賠失敗
+```
+forge test --mt test_claim_failed  -vv
+```
+**GovernanceTest**
+* Test1: 測試提案，並且通過後成功執行
+```
+forge test --mt test_create_proposal_success  -vv
+```
+* Test2: 測試提案，並且投票失敗
+```
+forge test --mt test_create_proposal_failed  -vv
+```
+
+</br>
+
+# Usage
+
+![image](https://github.com/Showyuan/P2P-Insurance/blob/main/Insurance_Application_Process.png)
+
+![image](https://github.com/Showyuan/P2P-Insurance/blob/main/Claim_Process.png)
+
+![image](https://github.com/Showyuan/P2P-Insurance/blob/main/Governance_Process.png)
 
