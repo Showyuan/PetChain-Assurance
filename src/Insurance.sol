@@ -128,9 +128,4 @@ contract Insurance {
         require(insurancePetsinPools[poolName][petId], "The pet wasn't insured the pool");
         return insuredTimeStamp[petId][poolName];
     }
-
-    // todo: expiration
-    function checkExpiration(uint256 petId, string memory poolName) external returns (bool){
-        
-    }
 }

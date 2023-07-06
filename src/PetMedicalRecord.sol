@@ -17,6 +17,7 @@ contract PetMedicalRecord {
         string diseaseName;        // 病名
         uint256 medicalExpenses;   // 診療費
         uint256 timestamp;         // 時間戳
+        bool isClaim;              // 是否已經理賠
     }
 
     // 寵物晶片ID => 醫療紀錄
@@ -60,7 +61,8 @@ contract PetMedicalRecord {
             record: record,
             diseaseName: diseaseName,
             medicalExpenses: medicalExpenses,
-            timestamp: block.timestamp
+            timestamp: block.timestamp,
+            isClaim: false
         });
 
         _medicalRecords[petId].push(newRecord);
@@ -82,10 +84,10 @@ contract PetMedicalRecord {
         petId: 晶片ID
         index: 第幾筆紀錄
      */
-    function getMedicalRecord(uint256 petId, uint256 index) external view returns (uint256, string memory, string memory, string memory, uint256, uint256) {
+    function getMedicalRecord(uint256 petId, uint256 index) external view returns (uint256, string memory, string memory, string memory, uint256, uint256, bool) {
         require(index < _medicalRecords[petId].length, "Invalid index");
 
         MedicalRecord memory record = _medicalRecords[petId][index];
-        return (record.petId, record.medicalId, record.record, record.diseaseName, record.medicalExpenses, record.timestamp);
+        return (record.petId, record.medicalId, record.record, record.diseaseName, record.medicalExpenses, record.timestamp, record.isClaim);
     }
 }

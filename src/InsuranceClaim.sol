@@ -17,6 +17,7 @@ contract InsuranceClaim {
     address private MRECORD_ADDR;
     address private GOVERNANCE_ADDR;
 
+    mapping(uint => mapping(string => uint)) public petSettledRecord;
     event Fraud(uint256 indexed petId, string poolName);
 
     constructor(address petNft, address petToken, address reserveFund, address insurance, address medicalRecord, address governance) {
@@ -37,21 +38,21 @@ contract InsuranceClaim {
         
         (uint index, bool allow) = checkFraud(petId, poolName, id);
         (,,,, address owner) = IPetNFT(PET_NFT_ADDR).getPetInfo(petId);
+        (,string memory medicalId ,,, uint medicalExpenses,,) = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecord(petId, index);
 
         if(msg.sender != GOVERNANCE_ADDR){
             require(allow, "Recommend going into the governance process");
             require(owner == msg.sender, "Only policyholders can file a claim");
         }
-
-        (,,,, uint medicalExpenses,) = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecord(petId, index);
         uint claimAmount = medicalExpenses * 80 / 100;
+        petSettledRecord[petId][medicalId] = claimAmount;
         require(IReserveFund(RESERVE_FUND_ADDR).getReserveBalance(poolName) > claimAmount, "Insufficient funds in the reserve");
 
         IReserveFund(RESERVE_FUND_ADDR).disburseClaim(poolName, claimAmount, owner);
     }
 
     /**
-        checkFraud 確認是否有欺騙行為
+        checkFraud 確認是否可以直接理賠
         petId: 寵物晶片ID
         poolName: 保險名稱
      */
@@ -67,10 +68,11 @@ contract InsuranceClaim {
         // 確認醫療紀錄正確
         uint count = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecordsCount(petId);
         for(uint i = 0; i < count; i++){
-            (, string memory medicalId, string memory record,,, uint timestamp) = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecord(petId, i);
+            (, string memory medicalId, string memory record,,, uint timestamp, bool isClaim) = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecord(petId, i);
             
             if(keccak256(abi.encodePacked(id)) == keccak256(abi.encodePacked(medicalId)) && startTime <= timestamp){
-                if(keccak256(abi.encodePacked(medicalProcedure)) == keccak256(abi.encodePacked(record))){
+                if(keccak256(abi.encodePacked(medicalProcedure)) == keccak256(abi.encodePacked(record))&& !isClaim){
+                    isClaim = true;
                     return (i, true);
                 } else {
                     return (i, false);
@@ -79,5 +81,39 @@ contract InsuranceClaim {
         }
         emit Fraud(petId, poolName);
         return (type(uint).max, false);
+    }
+
+    /**
+        checkExpirationAndRefund 確認保險是否到期，到期且沒有理賠紀錄則退還10%保費
+        petId: 寵物晶片ID
+        poolName: 保險名稱
+     */
+    function checkExpirationAndRefund(uint256 petId, string memory poolName) external returns (bool){
+        uint expiredTime = IInsurance(INSURANCE_ADDR).getExpireTime(petId, poolName);
+        if(expiredTime > block.timestamp){
+            return false;
+        }
+
+        uint length = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecordsCount(petId);
+        (,,,, address owner) = IPetNFT(PET_NFT_ADDR).getPetInfo(petId);
+        uint amount;
+        uint refund;
+
+        for(uint i = 0; i < length; i++){
+            (, string memory medicalId,,,,, bool isClaim) = IPetMedicalRecord(MRECORD_ADDR).getMedicalRecord(petId, i);
+            if(isClaim) {
+                amount += petSettledRecord[petId][medicalId];
+            }
+        }
+
+        if(amount == 0){
+            (,,uint256 coverageAmount) = IInsurance(INSURANCE_ADDR).getInsurancePool(poolName);
+            refund = coverageAmount * 10 / 100;
+        }
+
+        IInsurance(INSURANCE_ADDR).cancelInsurance(petId, poolName);
+        IReserveFund(RESERVE_FUND_ADDR).disburseClaim(poolName, refund, owner);
+
+        return true;
     }
 }
