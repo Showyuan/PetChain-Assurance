@@ -21,6 +21,7 @@ contract SetUpTest is Test {
     Governance governance;
 
     address owner = makeAddr("owner");
+    address doctor = makeAddr("doctor");
 
     function setUp() public virtual{
 
@@ -35,6 +36,8 @@ contract SetUpTest is Test {
         insuranceClaim = new InsuranceClaim(address(petNft), address(token), address(reserveFund), address(insurance), address(petMedicalRecord), address(governance));
         reserveFund.setClaimAddr(address(insuranceClaim));
 
+        petMedicalRecord.registerDoctor(doctor);
+        
         vm.stopPrank();
     }
 }

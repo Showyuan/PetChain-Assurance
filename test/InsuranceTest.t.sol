@@ -9,7 +9,6 @@ import "openzeppelin-contracts/contracts/utils/Strings.sol";
 contract InsuranceTest is SetUpTest {
     
     // users
-    address doctor = makeAddr("doctor");
     address[] users = new address[](10);
 
     function setUp() public override {

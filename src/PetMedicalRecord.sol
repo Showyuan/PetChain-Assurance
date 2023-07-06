@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
-import "forge-std/console.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
 
 contract PetMedicalRecord {
     
-    //todo: 就醫紀錄應該要白名單地址
+    address private owner;
+
+    // 醫生的白名單
+    mapping(address => bool) public whitelist;
 
     struct MedicalRecord {
         uint256 petId;             // 晶片ID
@@ -22,6 +24,26 @@ contract PetMedicalRecord {
 
     event MedicalRecordAdded(uint256 indexed petId, string indexed medicalId, string diseaseName, uint256 timestamp);
 
+    modifier onlyDoctor() {
+        require(whitelist[msg.sender], "Only owner can call the function");
+        _;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call the function");
+        _;
+    }
+
+    constructor(){
+        owner = msg.sender;
+    }
+
+    function registerDoctor(address newDoctorAddr) external onlyOwner{
+        require(newDoctorAddr != address(0), "Address can't be 0");
+
+        whitelist[newDoctorAddr] = true;
+    }
+    
     /**
         addMedicalRecord 新增醫療紀錄
         petId: 晶片ID
@@ -29,7 +51,7 @@ contract PetMedicalRecord {
         diseaseName: 病名
         medicalExpenses: 診療費
      */
-    function addMedicalRecord(uint256 petId, string memory record, string memory diseaseName, uint256 medicalExpenses) external returns (string memory id){
+    function addMedicalRecord(uint256 petId, string memory record, string memory diseaseName, uint256 medicalExpenses) external onlyDoctor returns (string memory id){
         id = string(abi.encodePacked(Strings.toString(petId), "-",  Strings.toString(_medicalRecords[petId].length)));
 
         MedicalRecord memory newRecord = MedicalRecord({

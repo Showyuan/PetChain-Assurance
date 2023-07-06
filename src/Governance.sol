@@ -93,8 +93,7 @@ contract Governance {
         Proposal storage proposal = proposals[proposalId - 1];
         require(!proposal.executed, "Proposal has already been executed");
         require(proposal.startTime + VOTING_DURATION <= block.timestamp, "Voting period has not ended yet");
-
-        // todo 要改成過半數嗎？
+        
         require(proposal.votesFor > proposal.votesAgainst, "Proposal don't approve!");
 
         proposal.passed = true;

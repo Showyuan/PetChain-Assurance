@@ -7,6 +7,7 @@ import { InsuranceTest } from "./InsuranceTest.t.sol";
 
 contract GovernanceTest is InsuranceTest {
 
+    // Test1: 測試提案，並且通過後成功執行
     function test_create_proposal_success() public{
         
         test_claim_failed();
@@ -30,6 +31,7 @@ contract GovernanceTest is InsuranceTest {
         console.log("========== Governance End ==========");
     }
 
+    // Test2: 測試提案，並且投票失敗
     function test_create_proposal_failed() public{
         
         test_claim_failed();
