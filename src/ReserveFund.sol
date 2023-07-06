@@ -24,6 +24,10 @@ contract ReserveFund {
         _;
     }
 
+    /**
+        setClaimAddr 設置理賠合約地址
+        claimAddr: 理賠合約地址
+     */
     function setClaimAddr(address claimAddr) external onlyOwner {
         require(CLAIM_ADDR == address(0), "CLAIM_ADDR already has address");
         CLAIM_ADDR = claimAddr;

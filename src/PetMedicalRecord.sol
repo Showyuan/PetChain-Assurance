@@ -39,6 +39,10 @@ contract PetMedicalRecord {
         owner = msg.sender;
     }
 
+    /**
+        registerDoctor 新醫生註冊
+        newDoctorAddr: 醫生地址
+     */
     function registerDoctor(address newDoctorAddr) external onlyOwner{
         require(newDoctorAddr != address(0), "Address can't be 0");
 
