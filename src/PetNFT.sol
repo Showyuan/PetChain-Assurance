@@ -16,7 +16,18 @@ contract PetNFT is ERC721 {
     // 晶片ID => 寵物細節
     mapping(uint256 => Pet) private _pets;
 
-    constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {}
+    uint256 private _guardCounter;
+
+    modifier nonReentrant() {
+        _guardCounter += 1;
+        uint256 localCounter = _guardCounter;
+        _;
+        require(localCounter == _guardCounter);
+    }
+
+    constructor(string memory name_, string memory symbol_) ERC721(name_, symbol_) {
+        _guardCounter = 1;
+    }
 
     /**
         mintPet 新增一隻寵物
@@ -26,9 +37,7 @@ contract PetNFT is ERC721 {
         breed: 品種
         age: 年齡
      */
-    function mintPet(address owner, uint256 petId, string memory name, string memory breed, uint8 age) external {
-        _safeMint(owner, petId);
-
+    function mintPet(address owner, uint256 petId, string memory name, string memory breed, uint8 age) external nonReentrant{
         Pet memory newPet = Pet({
             id: petId,
             name: name,
@@ -38,6 +47,7 @@ contract PetNFT is ERC721 {
         });
         _pets[petId] = newPet;
 
+        _safeMint(owner, petId);
     }
 
     /**
