@@ -90,6 +90,8 @@ contract Insurance {
      */
     function cancelInsurance(uint256 petId, string memory poolName) external {
         require(insuredPoolsPerPet[petId].length > 0, "The pet wasn't insured any pool");
+        (, , , , address owner) = IPetNFT(PET_NFT_ADDR).getPetInfo(petId);
+        require(owner == msg.sender, "You aren't the pet's owner"); // todo 其他來源也都要再驗證
 
         // Remove petId from the insurancePetsinPools array of the pool
         insurancePetsinPools[poolName][petId] = false;
