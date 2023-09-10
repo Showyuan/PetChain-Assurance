@@ -108,7 +108,7 @@ contract InsuranceClaim {
 
         if(amount == 0){
             (,,uint256 coverageAmount) = IInsurance(INSURANCE_ADDR).getInsurancePool(poolName);
-            refund = coverageAmount * 10 / 100;
+            refund = (coverageAmount * 10 + 50) / 100; // 要考慮當 coverageAmount < 10，則 refund 會是 0，因此這邊採四捨五入
         }
 
         IInsurance(INSURANCE_ADDR).cancelInsurance(petId, poolName);
